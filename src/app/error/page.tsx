@@ -19,7 +19,7 @@ export default async function ErrorPage({
         <p className="mb-6 text-sm text-neutral-500">{message}</p>
         <Link
           href="/login"
-          className="inline-flex rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          className="inline-flex rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 dark:bg-brand-500 dark:hover:bg-brand-400"
         >
           Back to sign in
         </Link>

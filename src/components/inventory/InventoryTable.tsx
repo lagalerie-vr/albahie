@@ -6,15 +6,13 @@ import { Search, X, ImageOff, MapPin, ScanLine } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ViewToggle, type ViewMode } from "@/components/ViewToggle";
 
+import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
+import { STATUS_META, type ConsignmentStatus } from "@/lib/consignments";
+
 const ItemDrawer = dynamic(
   () => import("@/components/consignments/ItemDrawer").then((m) => m.ItemDrawer),
   { ssr: false },
 );
-const BarcodeScanner = dynamic(
-  () => import("@/components/inventory/BarcodeScanner").then((m) => m.BarcodeScanner),
-  { ssr: false },
-);
-import { STATUS_META, type ConsignmentStatus } from "@/lib/consignments";
 
 export interface InventoryListItem {
   id: string;
@@ -28,7 +26,7 @@ export interface InventoryListItem {
 }
 
 const control =
-  "rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-white dark:focus:ring-white";
+  "rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-brand-600 focus:ring-1 focus:ring-brand-600 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-brand-400 dark:focus:ring-brand-400";
 
 export function InventoryTable({ rows }: { rows: InventoryListItem[] }) {
   const [query, setQuery] = useState("");

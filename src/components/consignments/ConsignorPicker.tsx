@@ -5,7 +5,7 @@ import { Search, Check, UserPlus, X } from "lucide-react";
 import type { ConsignorSummary } from "@/lib/consignments";
 
 const input =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-white dark:focus:ring-white";
+  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-brand-600 focus:ring-1 focus:ring-brand-600 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-brand-400 dark:focus:ring-brand-400";
 const label = "mb-1 block text-sm font-medium";
 
 /**

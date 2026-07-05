@@ -74,7 +74,7 @@ export function ReportFilters({
         <button onClick={() => preset(30)} className="rounded-lg border border-neutral-300 px-2.5 py-2 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800">30d</button>
         <button onClick={() => preset(90)} className="rounded-lg border border-neutral-300 px-2.5 py-2 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800">90d</button>
         <button onClick={() => preset(365)} className="rounded-lg border border-neutral-300 px-2.5 py-2 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800">1y</button>
-        <button onClick={() => apply()} className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">
+        <button onClick={() => apply()} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600 dark:bg-brand-500 dark:hover:bg-brand-400">
           <Filter className="h-4 w-4" /> Apply
         </button>
         {active && (

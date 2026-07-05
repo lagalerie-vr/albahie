@@ -233,7 +233,7 @@ export default async function ReportsPage({
         <Kpi icon={CircleDollarSign} label="Outstanding" value={money(outstandingTotal)} />
         <Kpi icon={TrendingUp} label="Sell-through" value={`${sellThrough}%`} />
         <Kpi icon={Tag} label="Avg lot" value={money(avgLot)} />
-        <Kpi icon={Boxes} label="Lots sold" value={String(soldLots.length)} />
+        <Kpi icon={Boxes} label="Lots invoiced" value={String(invoices.length)} />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">

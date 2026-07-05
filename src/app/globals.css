@@ -1,8 +1,24 @@
 @import "tailwindcss";
 
+/*
+ * Dark mode is class-based (html.dark) so the in-app theme toggle works.
+ * A pre-hydration script in the root layout applies the stored preference
+ * (falling back to the system setting), so `dark:` behaves as before for
+ * users who never touch the toggle.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Warm paper — softer than pure white, easier on the eyes for long shifts */
+  --background: #f4f2ec;
+  --surface: #ffffff;
+  --foreground: #1c1a17;
+}
+
+:root.dark {
+  --background: #0a0a0a;
+  --surface: #171717;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,15 +28,68 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  /* AlBahie brand — heritage teal */
+  --color-brand-50: #f0f9f8;
+  --color-brand-100: #d9f0ee;
+  --color-brand-200: #b5e1dc;
+  --color-brand-300: #86cac4;
+  --color-brand-400: #57aca6;
+  --color-brand-500: #3b918b;
+  --color-brand-600: #2c7571;
+  --color-brand-700: #265e5b;
+  --color-brand-800: #214c4a;
+  --color-brand-900: #1e403e;
+  --color-brand-950: #0c2423;
+
+  /* Gold accent — hammer prices, highlights, the brand hairline */
+  --color-gold-300: #e8cf7a;
+  --color-gold-400: #d4af37;
+  --color-gold-500: #b28e2b;
+  --color-gold-600: #8f7022;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Brand-colored text selection */
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-950);
+}
+:root.dark ::selection {
+  background: var(--color-brand-800);
+  color: var(--color-brand-50);
+}
+
+/* Visible, consistent keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Slim scrollbars that match each theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d4 transparent;
+}
+:root.dark * {
+  scrollbar-color: #404040 transparent;
+}
+
+/* Hide the scrollbar but keep the element scrollable (module nav, chips). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
 }

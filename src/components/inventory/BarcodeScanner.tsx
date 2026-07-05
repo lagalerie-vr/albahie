@@ -13,10 +13,14 @@ interface BarcodeDetectorLike {
 type BarcodeDetectorCtor = new (opts?: { formats?: string[] }) => BarcodeDetectorLike;
 
 /**
- * Camera QR/barcode scanner using the native BarcodeDetector API (Chrome/Edge).
- * `onScan` returns true when the code matched an item (the scanner then closes);
- * false keeps the camera running so the user can try another label. A manual
- * entry field is always available as a fallback.
+ * Camera QR/barcode scanner. Uses the native BarcodeDetector API where it
+ * exists (Chrome/Edge/Android — reads QR *and* 1-D barcodes), and falls back
+ * to jsQR for QR codes everywhere else (notably iOS Safari, which has no
+ * BarcodeDetector). A manual entry field is always available.
+ *
+ * Note: camera access requires a secure context (https or localhost). Opening
+ * the app over a plain-http LAN address will block the camera in every browser;
+ * the manual field still works in that case.
  */
 export function BarcodeScanner({
   onScan,
@@ -26,7 +30,6 @@ export function BarcodeScanner({
   onClose: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [supported, setSupported] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState<string | null>(null);
   const [manual, setManual] = useState("");
@@ -36,18 +39,16 @@ export function BarcodeScanner({
     let raf = 0;
     let stopped = false;
 
+    function cleanup() {
+      cancelAnimationFrame(raf);
+      stream?.getTracks().forEach((t) => t.stop());
+    }
+
     async function start() {
-      const Ctor = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor })
-        .BarcodeDetector;
-      if (!Ctor) {
-        setSupported(false);
-        return;
-      }
-      let detector: BarcodeDetectorLike;
-      try {
-        detector = new Ctor();
-      } catch {
-        setSupported(false);
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError(
+          "The camera needs a secure (https) connection. Open the app over https, or type the reference below.",
+        );
         return;
       }
       try {
@@ -55,7 +56,9 @@ export function BarcodeScanner({
           video: { facingMode: "environment" },
         });
       } catch {
-        setError("Couldn’t access the camera. Check permissions, or type the reference below.");
+        setError(
+          "Couldn’t access the camera. Allow camera access in your browser, or type the reference below.",
+        );
         return;
       }
       if (stopped) {
@@ -67,31 +70,62 @@ export function BarcodeScanner({
       video.srcObject = stream;
       await video.play().catch(() => {});
 
+      // Prefer the native detector (QR + 1-D barcodes); else jsQR (QR only).
+      const Ctor = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor })
+        .BarcodeDetector;
+      let detector: BarcodeDetectorLike | null = null;
+      if (Ctor) {
+        try {
+          detector = new Ctor();
+        } catch {
+          detector = null;
+        }
+      }
+      // Lazily load jsQR only when the native detector is unavailable, so a
+      // problem loading it can never stop the scanner dialog from opening.
+      let jsQR: typeof import("jsqr").default | null = null;
+      if (!detector) {
+        try {
+          jsQR = (await import("jsqr")).default;
+        } catch {
+          jsQR = null;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
       const tick = async () => {
         if (stopped || !videoRef.current) return;
+        const v = videoRef.current;
+        let value: string | undefined;
         try {
-          const codes = await detector.detect(videoRef.current);
-          const value = codes.find((c) => c.rawValue)?.rawValue;
-          if (value) {
-            const ok = onScan(value);
-            if (ok) {
-              stopped = true;
-              cleanup();
-              return;
-            }
-            setNotFound(value);
+          if (detector) {
+            const codes = await detector.detect(v);
+            value = codes.find((c) => c.rawValue)?.rawValue;
+          } else if (jsQR && ctx && v.videoWidth) {
+            canvas.width = v.videoWidth;
+            canvas.height = v.videoHeight;
+            ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const found = jsQR(img.data, img.width, img.height, {
+              inversionAttempts: "dontInvert",
+            });
+            value = found?.data || undefined;
           }
         } catch {
-          // transient detect errors between frames are expected
+          // transient decode errors between frames are expected
+        }
+        if (value) {
+          if (onScan(value)) {
+            stopped = true;
+            cleanup();
+            return;
+          }
+          setNotFound(value);
         }
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
-    }
-
-    function cleanup() {
-      cancelAnimationFrame(raf);
-      stream?.getTracks().forEach((t) => t.stop());
     }
 
     start();
@@ -124,25 +158,21 @@ export function BarcodeScanner({
         </div>
 
         <div className="p-4">
-          {supported && !error ? (
+          {!error ? (
             <div className="relative overflow-hidden rounded-xl bg-black">
-              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <video ref={videoRef} className="aspect-square w-full object-cover" muted playsInline />
               <div className="pointer-events-none absolute inset-8 rounded-lg border-2 border-white/70" />
             </div>
           ) : (
             <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                {error ??
-                  "This browser can’t scan with the camera. Use Chrome or Edge, or type the reference below."}
-              </span>
+              <span>{error}</span>
             </div>
           )}
 
-          {supported && !error && (
+          {!error && (
             <p className="mt-3 text-center text-xs text-neutral-500">
-              Point the camera at the item’s QR code or barcode.
+              Point the camera at the item’s QR code.
             </p>
           )}
 
@@ -169,7 +199,7 @@ export function BarcodeScanner({
               />
               <button
                 type="submit"
-                className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
+                className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600 dark:bg-brand-500 dark:hover:bg-brand-400"
               >
                 Find
               </button>
